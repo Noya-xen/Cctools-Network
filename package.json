@@ -1,0 +1,17 @@
+{
+  "name": "cctools-bot",
+  "version": "1.0.0",
+  "description": "Auto check-in and UPVOTE for CCTools Network",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "fake-useragent": "^1.0.1",
+    "https-proxy-agent": "^5.0.1",
+    "puppeteer": "^24.40.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

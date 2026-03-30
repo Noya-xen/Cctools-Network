@@ -1,0 +1,7 @@
+node_modules/
+account.txt
+proxies.txt
+*.log
+.DS_Store
+.env
+.gemini/
