@@ -31,7 +31,7 @@ const SUPABASE_URL     = 'https://zxazrkpnwlcaeqnquiqx.supabase.co';
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YXpya3Bud2xjYWVxbnF1aXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTczMzYsImV4cCI6MjA4OTUzMzMzNn0.JqqMvMb4y3z-Vhnu-HCa9Q79E_1NY0f3gDROnYc-F5c';
 
 // SCTG Cloudflare Turnstile Solver Config
-const SCTG_API_KEY      = 'whAas2MbGOgDdnKfr0C7MpGJq7ON0Ud9';   // ← API key SCTG kamu
+const SCTG_API_KEY      = '';   // ← API key SCTG kamu
 const SCTG_SUBMIT_URL   = 'https://sctg.xyz/in.php';
 const SCTG_RESULT_URL   = 'https://sctg.xyz/res.php';
 const TURNSTILE_SITEKEY = '0x4AAAAAACxEKUX_mLIaTMBc';
