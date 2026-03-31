@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const axios = require('axios');
+const { URLSearchParams } = require('url');
 
 // ─────────────────────────────────────────────
 //  CONSOLE COLORS
@@ -31,7 +32,7 @@ const SUPABASE_URL     = 'https://zxazrkpnwlcaeqnquiqx.supabase.co';
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YXpya3Bud2xjYWVxbnF1aXF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTczMzYsImV4cCI6MjA4OTUzMzMzNn0.JqqMvMb4y3z-Vhnu-HCa9Q79E_1NY0f3gDROnYc-F5c';
 
 // SCTG Cloudflare Turnstile Solver Config
-const SCTG_API_KEY      = '';   // ← API key SCTG kamu
+const SCTG_API_KEY      = 'whAas2MbGOgDdnKfr0C7MpGJq7ON0Ud9';   // ← API key SCTG kamu
 const SCTG_SUBMIT_URL   = 'https://sctg.xyz/in.php';
 const SCTG_RESULT_URL   = 'https://sctg.xyz/res.php';
 const TURNSTILE_SITEKEY = '0x4AAAAAACxEKUX_mLIaTMBc';
@@ -129,6 +130,7 @@ async function solveTurnstile(proxyStr = null) {
     console.log(c.magenta(`  [CAPTCHA] Mengirim task Turnstile ke SCTG...`));
     
     let taskId = null;
+    let activeAgent = null;
     
     // Step 1: Submit task (dengan retry)
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -141,11 +143,28 @@ async function solveTurnstile(proxyStr = null) {
                 json:    '0',
             });
 
-            // Jangan gunakan proxy untuk panggil API Solver (SCTG)
-            const resp = await axios.post(SCTG_SUBMIT_URL, params.toString(), {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            // Default: try direct connection first
+            let solverConfig = {
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-Agent': USER_AGENT
+                },
                 timeout: 30000
-            });
+            };
+
+            // If it's a retry and we have a proxy, try using the proxy for SCTG too
+            if (attempt > 0 && proxyStr) {
+                console.log(c.yellow(`  [CAPTCHA] Attempt ${attempt + 1}: Mencoba menggunakan proxy untuk SCTG...`));
+                const proxyAgent = getProxyConfig(proxyStr);
+                if (proxyAgent.httpsAgent) {
+                    activeAgent = proxyAgent;
+                    solverConfig.httpsAgent = proxyAgent.httpsAgent;
+                    solverConfig.httpAgent = proxyAgent.httpAgent;
+                    solverConfig.proxy = false;
+                }
+            }
+
+            const resp = await axios.post(SCTG_SUBMIT_URL, params.toString(), solverConfig);
             
             const body = resp.data.trim();
             if (body.startsWith('OK|')) {
@@ -161,7 +180,13 @@ async function solveTurnstile(proxyStr = null) {
                 }
             }
         } catch (e) {
-            console.log(c.yellow(`  [CAPTCHA] Submit attempt ${attempt + 1} exception: ${e.message}`));
+            let errorMsg = e.message;
+            if (e.response && e.response.data) {
+                errorMsg += ` | Data: ${JSON.stringify(e.response.data).substring(0, 50)}`;
+            } else if (e.code) {
+                errorMsg += ` | Code: ${e.code}`;
+            }
+            console.log(c.yellow(`  [CAPTCHA] Submit attempt ${attempt + 1} exception: ${errorMsg}`));
             await sleep(5000);
         }
     }
@@ -180,10 +205,19 @@ async function solveTurnstile(proxyStr = null) {
         elapsed += POLL_INTERVAL;
         
         try {
-            const res = await axios.get(SCTG_RESULT_URL, {
+            const pollConfig = {
                 params: { key: SCTG_API_KEY, action: 'get', id: taskId },
-                timeout: 30000
-            });
+                timeout: 30000,
+                headers: { 'User-Agent': USER_AGENT }
+            };
+            
+            if (activeAgent) {
+                pollConfig.httpsAgent = activeAgent.httpsAgent;
+                pollConfig.httpAgent = activeAgent.httpAgent;
+                pollConfig.proxy = false;
+            }
+
+            const res = await axios.get(SCTG_RESULT_URL, pollConfig);
             const result = res.data.trim();
             
             if (result === 'CAPCHA_NOT_READY') {
@@ -205,7 +239,7 @@ async function solveTurnstile(proxyStr = null) {
             console.log(c.red(`  [CAPTCHA] Error solver: ${result}`));
             return null;
         } catch (e) {
-            console.log(c.yellow(`  [CAPTCHA] Poll error (retrying): ${e.message}`));
+            console.log(c.yellow(`  [CAPTCHA] Poll error (retrying): ${e.message} ${e.code || ''}`));
             continue;
         }
     }
