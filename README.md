@@ -53,6 +53,8 @@ Cukup jalankan perintah berikut di terminal:
 ```bash
 node index.js
 ```
+<img width="774" height="247" alt="Screenshot 2026-03-31 084257" src="https://github.com/user-attachments/assets/5c7dff41-d963-4cf7-9c4a-29b304d755d3" />
+
 
 ## 📜 Disclaimer
 Skrip ini dibuat untuk tujuan pembelajaran dan kemudahan personal. Segala risiko yang timbul akibat penggunaan skrip ini (termasuk namun tidak terbatas pada pemblokiran akun) adalah tanggung jawab pengguna sepenuhnya. Gunakanlah secara bijak.
